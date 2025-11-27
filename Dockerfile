@@ -1,25 +1,28 @@
 # --------------------
 # 1. Build Stage: Compiles Java code and creates the JAR file
-#    Using a full JDK image instead of the standard 'maven' image.
+#    Uses the correct UBI 9 OpenJDK 21 tag.
 # --------------------
-# Start with a full JDK image (same base family as the JRE)
-FROM eclipse-temurin:21-jdk-ubi9 AS build
+FROM registry.access.redhat.com/ubi9/openjdk-21:21-17 AS build
 
 # Set environment variables for Maven download and installation
 ARG MAVEN_VERSION=3.9.5
 ARG MAVEN_HOME=/usr/share/maven
 ARG PATH="$MAVEN_HOME/bin:$PATH"
 
-# Download and install Maven (avoids the official Maven image's internal setup)
-RUN set -uxe && \
+# Install necessary tools (curl, tar, gzip) to download and extract Maven
+# and then download and install Maven
+RUN microdnf update && microdnf install -y curl tar gzip && \
+    set -uxe && \
     # Download Maven distribution
     curl -fsSL https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz -o /tmp/maven.tar.gz && \
     # Extract Maven to the target location
     tar -xzf /tmp/maven.tar.gz -C /usr/share/ && \
     # Rename the extracted directory
     mv /usr/share/apache-maven-$MAVEN_VERSION $MAVEN_HOME && \
-    # Clean up
-    rm /tmp/maven.tar.gz
+    # Clean up (remove package install dependencies)
+    microdnf remove -y curl tar gzip && \
+    rm /tmp/maven.tar.gz && \
+    microdnf clean all
 
 # Set the working directory for the build
 WORKDIR /app
@@ -36,8 +39,8 @@ RUN mvn -B -DskipTests package
 # --------------------
 # 2. Final Stage: Creates the lightweight runtime image
 # --------------------
-# Use the minimal JRE image for the final runtime
-FROM eclipse-temurin:21-jre-ubi9-minimal
+# Using a widely available JRE UBI minimal image
+FROM eclipse-temurin:21-jre-ubi-minimal
 
 # Set a non-root user (good security practice)
 USER 0
