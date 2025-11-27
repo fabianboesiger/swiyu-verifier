@@ -1,4 +1,6 @@
-FROM maven:3.9.5-eclipse-temurin-21 AS build
+ARG SOURCE_IMAGE=eclipse-temurin:21-jre-ubi9-minimal
+
+FROM ${SOURCE_IMAGE}
 WORKDIR /app
 
 COPY verifier-application/pom.xml verifier-application/
@@ -8,7 +10,6 @@ RUN mvn -f verifier-application/pom.xml clean package -DskipTests
 
 
 
-ARG SOURCE_IMAGE=eclipse-temurin:21-jre-ubi9-minimal
 FROM ${SOURCE_IMAGE}
 
 USER 0
