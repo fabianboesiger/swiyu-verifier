@@ -9,6 +9,8 @@ ARG MAVEN_VERSION=3.9.5
 ARG MAVEN_HOME=/usr/share/maven
 ARG PATH="$MAVEN_HOME/bin:$PATH"
 
+USER 0
+
 # Install necessary tools (curl, tar, gzip) and then install Maven
 RUN microdnf update && microdnf install -y curl tar gzip && \
     set -uxe && \
