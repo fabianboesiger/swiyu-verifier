@@ -11,17 +11,17 @@ ARG PATH="$MAVEN_HOME/bin:$PATH"
 
 USER 0
 
-# Install necessary tools (curl, tar, gzip) and then install Maven
 RUN export MICRODNF_INTERACTIVE=false && \
-    microdnf install -y curl tar gzip && \
+    # Use --allowerasing to remove curl-minimal and install the requested packages
+    microdnf install -y --allowerasing curl tar gzip && \
     set -uxe && \
     # Download Maven distribution
     curl -fsSL https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz -o /tmp/maven.tar.gz && \
     # Extract Maven
     tar -xzf /tmp/maven.tar.gz -C /usr/share/ && \
     mv /usr/share/apache-maven-$MAVEN_VERSION $MAVEN_HOME && \
-    # Clean up and remove packages in the same layer
-    microdnf remove -y curl tar gzip && \
+    # Clean up. NOTE: We only need to remove 'tar' and 'gzip' now.
+    microdnf remove -y tar gzip && \
     rm /tmp/maven.tar.gz && \
     microdnf clean all
 
