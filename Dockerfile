@@ -2,7 +2,7 @@
 # 1. Build Stage: Compiles Java code and creates the JAR file
 #    Uses the correct UBI 9 OpenJDK 21 tag.
 # --------------------
-FROM registry.access.redhat.com/ubi9/openjdk-21:21-17 AS build
+FROM eclipse-temurin:21-jdk AS build
 
 # Set environment variables for Maven download and installation
 ARG MAVEN_VERSION=3.9.5
