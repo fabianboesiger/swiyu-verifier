@@ -1,6 +1,12 @@
-# SPDX-FileCopyrightText: 2025 Swiss Confederation
-#
-# SPDX-License-Identifier: MIT
+FROM maven:3.9.5-eclipse-temurin-21 AS build 🛠️
+WORKDIR /app
+
+COPY verifier-application/pom.xml verifier-application/
+COPY verifier-application/src/ verifier-application/src/
+
+RUN mvn -f verifier-application/pom.xml clean package -DskipTests
+
+
 
 ARG SOURCE_IMAGE=eclipse-temurin:21-jre-ubi9-minimal
 FROM ${SOURCE_IMAGE}
