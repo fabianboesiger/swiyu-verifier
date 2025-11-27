@@ -1,25 +1,23 @@
 # --------------------
 # 1. Build Stage: Compiles Java code and creates the JAR file
-#    Uses the correct UBI 9 OpenJDK 21 tag.
 # --------------------
-FROM eclipse-temurin:21-jdk AS build
+# Using the most generic and stable tag for OpenJDK 21 on UBI 9
+FROM registry.access.redhat.com/ubi9/openjdk-21 AS build
 
 # Set environment variables for Maven download and installation
 ARG MAVEN_VERSION=3.9.5
 ARG MAVEN_HOME=/usr/share/maven
 ARG PATH="$MAVEN_HOME/bin:$PATH"
 
-# Install necessary tools (curl, tar, gzip) to download and extract Maven
-# and then download and install Maven
+# Install necessary tools (curl, tar, gzip) and then install Maven
 RUN microdnf update && microdnf install -y curl tar gzip && \
     set -uxe && \
     # Download Maven distribution
     curl -fsSL https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz -o /tmp/maven.tar.gz && \
-    # Extract Maven to the target location
+    # Extract Maven
     tar -xzf /tmp/maven.tar.gz -C /usr/share/ && \
-    # Rename the extracted directory
     mv /usr/share/apache-maven-$MAVEN_VERSION $MAVEN_HOME && \
-    # Clean up (remove package install dependencies)
+    # Clean up
     microdnf remove -y curl tar gzip && \
     rm /tmp/maven.tar.gz && \
     microdnf clean all
@@ -27,34 +25,34 @@ RUN microdnf update && microdnf install -y curl tar gzip && \
 # Set the working directory for the build
 WORKDIR /app
 
-# Copy the Maven project files (pom.xml) first for layer caching
+# Copy the Maven project files (pom.xml) first
 COPY pom.xml .
 
 # Copy the source code
 COPY verifier-application/ verifier-application/
 
-# Execute the Maven build to produce the JAR
+# Execute the Maven build
 RUN mvn -B -DskipTests package
 
 # --------------------
 # 2. Final Stage: Creates the lightweight runtime image
 # --------------------
-# Using a widely available JRE UBI minimal image
-FROM eclipse-temurin:21-jre-ubi-minimal
+# *** FIX: Using the official Red Hat UBI JRE 21 runtime image ***
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime AS final
 
-# Set a non-root user (good security practice)
+# Set a non-root user
 USER 0
 # Expose the application port
 EXPOSE 8080
 
-# Create the application directory and copy the entrypoint script
+# Application setup
 WORKDIR /app
 COPY scripts/entrypoint.sh /app/
 
 # Copy the resulting JAR file from the 'build' stage
 COPY --from=build /app/verifier-application/target/*.jar /app/app.jar
 
-# Set permissions for the entrypoint script
+# Set permissions
 RUN set -uxe && \
     chmod g=u /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
