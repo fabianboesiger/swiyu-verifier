@@ -12,14 +12,15 @@ ARG PATH="$MAVEN_HOME/bin:$PATH"
 USER 0
 
 # Install necessary tools (curl, tar, gzip) and then install Maven
-RUN microdnf update && microdnf install -y curl tar gzip && \
+RUN export MICRODNF_INTERACTIVE=false && \
+    microdnf install -y curl tar gzip && \
     set -uxe && \
     # Download Maven distribution
     curl -fsSL https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz -o /tmp/maven.tar.gz && \
     # Extract Maven
     tar -xzf /tmp/maven.tar.gz -C /usr/share/ && \
     mv /usr/share/apache-maven-$MAVEN_VERSION $MAVEN_HOME && \
-    # Clean up
+    # Clean up and remove packages in the same layer
     microdnf remove -y curl tar gzip && \
     rm /tmp/maven.tar.gz && \
     microdnf clean all
