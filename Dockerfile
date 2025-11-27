@@ -31,8 +31,9 @@ WORKDIR /app
 # Copy the Maven project files (pom.xml) first
 COPY pom.xml .
 
-# Copy the source code
+# Copy both child module directories that the root pom.xml requires.
 COPY verifier-application/ verifier-application/
+COPY verifier-service/ verifier-service/
 
 # Execute the Maven build
 RUN mvn -B -DskipTests package
