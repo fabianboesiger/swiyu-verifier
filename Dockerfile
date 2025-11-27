@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-ARG SOURCE_IMAGE=bit-base-images-docker-hosted.nexus.bit.admin.ch/bit/eclipse-temurin:21-jre-ubi9-minimal
+ARG SOURCE_IMAGE=eclipse-temurin:21-jre-ubi9-minimal
 FROM ${SOURCE_IMAGE}
 
 USER 0
